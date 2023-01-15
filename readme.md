@@ -4,6 +4,15 @@
 
 ![Banner](./banner.svg)
 
+- [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
+- [Encrypt a file](#encrypt-a-file)
+- [Decrypt a file](#decrypt-a-file)
+  - [Decrypt on the console, don't write a file](#decrypt-on-the-console-dont-write-a-file)
+- [A DOS-compatible version](#a-dos-compatible-version)
+- [License](#license)
+
+
 ## Introduction
 
 Using a [Docker Alpine/OpenSSL](https://hub.docker.com/r/alpine/openssl) image, it's so easy to encrypt/decrypt files using OpenSSL.
@@ -78,7 +87,7 @@ Here is the content of the `decrypt.sh` file.
 
 (
   MY_PASSWORD="ThisIsMyLongPasswordNobodyWillBeAbleToCrackIt" &&
-  docker run --rm -it -v $(pwd):/data -w /data -u $(id -u):$(id -g) alpine/openssl enc -aes-256-cbc -salt -pbkdf2 -a -d -in /data/secrets_encrypted.md -out //data/secrets_decrypted.md -k ${MY_PASSWORD}
+  docker run --rm -it -v $(pwd):/data -w /data -u $(id -u):$(id -g) alpine/openssl enc -aes-256-cbc -salt -pbkdf2 -a -d -in /data/secrets_encrypted.md -out /data/secrets_decrypted.md -k ${MY_PASSWORD}
 )
 ```
 
@@ -100,10 +109,38 @@ By running that command (or by running `decrypt.sh`), you'll decrypt the file `s
 
 ### Decrypt on the console, don't write a file
 
-Edit the `decrypt.sh` file and search for `-out //data/secrets_decrypted.md`. Remove that part.
+Edit the `decrypt.sh` file and search for `-out /data/secrets_decrypted.md`. Remove that part.
 
 Now, when you'll run `decrypt.sh` the decrypted content will be displayed on the console only, nothing will be written on the disk. Your secrets are safe.
+
+## A DOS-compatible version
+
+The encryption script, `encrypt.cmd`, will ask you for a password (since the `-k` parameter is not part of the instruction). If the encrypted file has been created, the original one will be removed from your disk.
+
+```text
+@echo off
+
+cls
+
+docker run --rm -it -v %CD%:/data -w /data alpine/openssl enc -aes-256-cbc -salt -pbkdf2 -a -in /data/secrets.md -out /data/secrets.encrypted
+
+# Put this part in comment if you want to keep the original, unencrypted, file.
+IF EXIST secrets.encrypted (
+  del secrets.md
+)
+```
+
+The decryption script, `decrypt.cmd` will ask you for the password and will display the decrypted content on the console (since the `-out` parameter is not part of the instruction).
+
+```text
+@echo off
+
+cls
+
+docker run --rm -it -v C:\temp:/data -w /data alpine/openssl enc -aes-256-cbc -salt -pbkdf2 -a -d -in /data/secrets.encrypted
+```
 
 ## License
 
 [MIT](LICENSE)
+
